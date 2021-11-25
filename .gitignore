@@ -1,0 +1,6 @@
+.idea
+bin
+src
+.env
+main
+log/*.log
