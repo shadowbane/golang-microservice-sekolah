@@ -13,8 +13,17 @@ func Get(app *application.Application) *httprouter.Router {
 	// index
 	mux.GET("/api/v1/school", controllers.SchoolIndex(app))
 
+	// show
+	mux.GET("/api/v1/school/:id", controllers.SchoolShow(app))
+
 	// store
 	mux.POST("/api/v1/school", controllers.SchoolCreate(app))
+
+	// update
+	mux.PUT("/api/v1/school/:id", controllers.SchoolUpdate(app))
+
+	// delete
+	mux.DELETE("/api/v1/school/:id", controllers.SchoolDelete(app))
 
 	// post
 	//mux.POST("/whatsapp", _default.Store(app))

@@ -7,7 +7,7 @@ import (
 
 type School struct {
 	ID            uint      `json:"id" gorm:"auto_increment"`
-	UUID          uuid.UUID `json:"uuid" gorm:"primary_key"`
+	UUID          uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid;default:uuid_generate_v4()"`
 	Name          string    `json:"name"`
 	KodeProvinsi  string    `json:"kode_provinsi"`
 	KodeKabKota   string    `json:"kode_kab_kota"`

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"go.uber.org/zap"
 	"os"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -17,12 +18,6 @@ type Config struct {
 	dbPort string
 	dbName string
 
-	testdbUser string
-	testdbPswd string
-	testdbHost string
-	testdbPort string
-	testdbName string
-
 	apiPort string
 	migrate string
 
@@ -33,29 +28,30 @@ type Config struct {
 func Get() *Config {
 	conf := &Config{}
 
-	flag.StringVar(&conf.appEnv, "appenv", os.Getenv("APP_ENV"), "Application Environment")
+	flag.StringVar(&conf.appEnv, "appenv", getenv("APP_ENV", "production"), "Application Environment")
 
-	flag.StringVar(&conf.dbUser, "dbuser", os.Getenv("DB_USER"), "DB user name")
-	flag.StringVar(&conf.dbPswd, "dbpswd", os.Getenv("DB_PASSWORD"), "DB pass")
-	flag.StringVar(&conf.dbPort, "dbport", os.Getenv("DB_PORT"), "DB port")
-	flag.StringVar(&conf.dbHost, "dbhost", os.Getenv("DB_HOST"), "DB host")
-	flag.StringVar(&conf.dbName, "dbname", os.Getenv("DB_NAME"), "DB name")
+	flag.StringVar(&conf.dbUser, "dbuser", getenv("DB_USERNAME", "root"), "DB user name")
+	flag.StringVar(&conf.dbPswd, "dbpswd", getenv("DB_PASSWORD", "password"), "DB pass")
+	flag.StringVar(&conf.dbPort, "dbport", getenv("DB_PORT", "3306"), "DB port")
+	flag.StringVar(&conf.dbHost, "dbhost", getenv("DB_HOST", "localhost"), "DB host")
+	flag.StringVar(&conf.dbName, "dbname", getenv("DB_DATABASE", "microservice_sekolah"), "DB name")
 
-	flag.StringVar(&conf.testdbUser, "testdbuser", os.Getenv("TESTDB_USER"), "DB user name")
-	flag.StringVar(&conf.testdbPswd, "testdbpswd", os.Getenv("TESTDB_PASSWORD"), "DB pass")
-	flag.StringVar(&conf.testdbHost, "testdbhost", os.Getenv("TESTDB_PORT"), "DB port")
-	flag.StringVar(&conf.testdbPort, "testdbport", os.Getenv("TESTDB_HOST"), "DB host")
-	flag.StringVar(&conf.testdbName, "testdbname", os.Getenv("TESTDB_NAME"), "DB name")
+	flag.StringVar(&conf.apiPort, "apiPort", getenv("API_PORT", "8080"), "API Port")
 
-	flag.StringVar(&conf.apiPort, "apiPort", os.Getenv("API_PORT"), "API Port")
-	flag.StringVar(&conf.migrate, "migrate", "up", "specify if we should be migrating DB 'up' or 'down'")
-
-	flag.StringVar(&conf.redisHost, "redisHost", os.Getenv("REDIS_HOST"), "Redis Host")
-	flag.StringVar(&conf.redisPort, "redisPort", os.Getenv("REDIS_PORT"), "Redis Port")
+	flag.StringVar(&conf.redisHost, "redisHost", getenv("REDIS_HOST", "localhost"), "Redis Host")
+	flag.StringVar(&conf.redisPort, "redisPort", getenv("REDIS_PORT", "6379"), "Redis Port")
 
 	flag.Parse()
 
 	return conf
+}
+
+func getenv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+
+	return fallback
 }
 
 func (c *Config) GetAppEnv() string {
@@ -64,10 +60,6 @@ func (c *Config) GetAppEnv() string {
 
 func (c *Config) GetDBConnStr() string {
 	return c.getDBConnStr(c.dbHost, c.dbName)
-}
-
-func (c *Config) GetTestDBConnStr() string {
-	return c.getDBConnStr(c.testdbHost, c.testdbName)
 }
 
 func (c *Config) GetDBConnStrForMigration() string {
@@ -110,7 +102,10 @@ func (c *Config) GetRedisConnStr() string {
 }
 
 func (c *Config) ConnectToDatabase() *gorm.DB {
-	fmt.Printf("Connecting to database @ %s:%s\n", c.dbHost, c.dbPort)
+	if c.appEnv != "production" {
+		zap.S().Debugf("Connecting to database @ %s:%s\n", c.dbHost, c.dbPort)
+	}
+
 	db, err := gorm.Open("mysql", c.GetDBConnStr())
 	if err != nil {
 		panic(err)
