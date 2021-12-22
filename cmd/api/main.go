@@ -17,7 +17,7 @@ func main() {
 	zap.S().Info("Starting Application")
 
 	if err := godotenv.Load(); err != nil {
-		zap.S().Fatal("Failed to load env vars!")
+		zap.S().Warnf("Failed to load env vars!")
 	}
 
 	app, err := application.Start()

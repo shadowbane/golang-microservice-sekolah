@@ -72,6 +72,10 @@ func SchoolIndex(app *application.Application) httprouter.Handle {
 			zap.S().Errorf(err.Error())
 			writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		}
+
+		if app.Cfg.GetAppEnv() != "production" {
+			PrintMemUsage()
+		}
 	}
 }
 
