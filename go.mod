@@ -7,8 +7,8 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/joho/godotenv v1.4.0
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/radovskyb/watcher v1.0.7
 	go.uber.org/zap v1.19.1
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (

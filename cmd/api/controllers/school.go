@@ -93,7 +93,13 @@ func SchoolShow(app *application.Application) httprouter.Handle {
 		var school schoolData
 
 		if err := app.DB.Table("schools").Where("uuid = ?", p.ByName("id")).First(&school).Error; err != nil {
+			zap.S().Errorf("Error %d: %s", http.StatusNotFound, err.Error())
 			http.Error(w, err.Error(), http.StatusNotFound)
+
+			if app.Cfg.GetAppEnv() != "production" {
+				PrintMemUsage()
+			}
+
 			return
 		}
 

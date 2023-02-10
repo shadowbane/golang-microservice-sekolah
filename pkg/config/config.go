@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"github.com/shadowbane/golang-microservice-sekolah/pkg/logger"
 	"go.uber.org/zap"
 	"os"
 
@@ -23,6 +24,8 @@ type Config struct {
 
 	redisHost string
 	redisPort string
+
+	LogConfig *logger.LogConfig
 }
 
 func Get() *Config {
@@ -41,11 +44,14 @@ func Get() *Config {
 	flag.StringVar(&conf.redisHost, "redisHost", getenv("REDIS_HOST", "localhost"), "Redis Host")
 	flag.StringVar(&conf.redisPort, "redisPort", getenv("REDIS_PORT", "6379"), "Redis Port")
 
+	conf.LogConfig = logger.LoadEnvForLogger()
+
 	flag.Parse()
 
 	return conf
 }
 
+// getenv get environment variable or fallback to default value if not set
 func getenv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value

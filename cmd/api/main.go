@@ -7,14 +7,16 @@ import (
 	"github.com/shadowbane/golang-microservice-sekolah/cmd/api/router"
 	"github.com/shadowbane/golang-microservice-sekolah/pkg/application"
 	"github.com/shadowbane/golang-microservice-sekolah/pkg/exithandler"
-	"github.com/shadowbane/golang-microservice-sekolah/pkg/logger"
 	"github.com/shadowbane/golang-microservice-sekolah/pkg/server"
 	"go.uber.org/zap"
+	"runtime"
 )
 
 func main() {
-	logger.Init()
-	zap.S().Info("Starting Application")
+	var cpuCount = runtime.NumCPU()
+	if cpuCount > 1 {
+		runtime.GOMAXPROCS(cpuCount)
+	}
 
 	if err := godotenv.Load(); err != nil {
 		zap.S().Warnf("Failed to load env vars!")

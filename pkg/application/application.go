@@ -3,6 +3,7 @@ package application
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/shadowbane/golang-microservice-sekolah/pkg/config"
+	"github.com/shadowbane/golang-microservice-sekolah/pkg/logger"
 )
 
 type Application struct {
@@ -13,6 +14,8 @@ type Application struct {
 func Start() (*Application, error) {
 	cfg := config.Get()
 	db := cfg.ConnectToDatabase()
+
+	logger.Init(cfg.LogConfig)
 
 	return &Application{
 		Cfg: cfg,

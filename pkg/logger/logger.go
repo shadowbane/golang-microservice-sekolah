@@ -3,65 +3,92 @@ package logger
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
 	"os"
-	"time"
 )
 
-var (
-	Info  = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	Error = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-)
-
-type LogFile struct {
-	file string
+type lumberjackSink struct {
+	*lumberjack.Logger
 }
 
-func createLogFile(l LogFile) {
-	f, err := os.OpenFile(l.file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = f.Close()
-	if err != nil {
-		return
-	}
-
+func (lumberjackSink) Sync() error {
+	return nil
 }
 
-func initZapLog() *zap.Logger {
-	t := time.Now()
-	formattedTime := t.Format("2006-01-02")
-	logfile := LogFile{
-		"log/" + formattedTime + ".log",
+// initEncoder initializes the encoder for the console and file logging
+func initEncoder(c *LogConfig) (zapcore.Encoder, zapcore.Encoder) {
+	fileEncoderConfig := c.FileEncoderConfig()
+	consoleEncoderConfig := c.ConsoleEncoderConfig()
+
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
+	fileEncoder := zapcore.NewConsoleEncoder(fileEncoderConfig)
+
+	if c.ConsoleJson {
+		log.Print("JSON output enabled for ConsoleJson")
+		consoleEncoder = zapcore.NewJSONEncoder(consoleEncoderConfig)
+	}
+	if c.FileJson {
+		log.Print("JSON output enabled for FileJson")
+		fileEncoder = zapcore.NewJSONEncoder(fileEncoderConfig)
 	}
 
-	createLogFile(logfile)
-
-	config := zap.NewDevelopmentConfig()
-	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	config.EncoderConfig.TimeKey = "timestamp"
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	config.OutputPaths = []string{
-		logfile.file,
-		"stdout",
-	}
-	config.ErrorOutputPaths = []string{
-		logfile.file,
-		"stderr",
-	}
-	zapLogger, _ := config.Build()
-	return zapLogger
+	return consoleEncoder, fileEncoder
 }
 
-func Init() {
-	logManager := initZapLog()
+// initZapLog initializes the zap logger
+func initZapLog(logLevel zapcore.Level, c *LogConfig) *zap.Logger {
+	ll := c.InitLumberjackLogger()
+
+	consoleEncoder, fileEncoder := initEncoder(c)
+
+	var cores []zapcore.Core
+
+	if c.ConsoleEnabled {
+		log.Print("Console logging is enabled")
+		cores = append(cores, zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stderr), logLevel))
+	}
+	if c.FileEnabled {
+		log.Print("File logging is enabled")
+		cores = append(cores, zapcore.NewCore(fileEncoder, lumberjackSink{Logger: &ll}, logLevel))
+	}
+	core := zapcore.NewTee(cores...)
+
+	unsugared := zap.New(core)
+
+	return unsugared
+}
+
+func Init(c *LogConfig) {
+	zap.S().Debug("initializing logger")
+	logLevel := getLogLevel(c.Level)
+	logManager := initZapLog(logLevel, c)
+
 	zap.ReplaceGlobals(logManager)
+
 	defer func(logManager *zap.Logger) {
 		err := logManager.Sync()
 		if err != nil {
 
 		}
 	}(logManager) // flushes buffer, if any
+}
+
+// getLogLevel returns the log level based on the config.
+//
+// Valid log levels are debug, info, warn, and error.
+// If an invalid log level is provided, info is returned
+func getLogLevel(configLevel string) zapcore.Level {
+	switch configLevel {
+	case "debug":
+		return zapcore.DebugLevel
+	case "info":
+		return zapcore.InfoLevel
+	case "warn":
+		return zapcore.WarnLevel
+	case "error":
+		return zapcore.ErrorLevel
+	default:
+		return zapcore.InfoLevel
+	}
 }
