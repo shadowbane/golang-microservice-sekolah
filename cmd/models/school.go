@@ -6,19 +6,18 @@ import (
 )
 
 type School struct {
-	ID            uint      `json:"id" gorm:"auto_increment"`
-	UUID          uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid;default:uuid_generate_v4()"`
-	Name          string    `json:"name"`
+	ID            uint      `json:"id" gorm:"auto_increment;unique"`
+	UUID          uuid.UUID `json:"uuid" gorm:"primary_key;type:char(36);not null;unique"`
+	Name          string    `json:"name" gorm:"not null"`
 	KodeProvinsi  string    `json:"kode_provinsi"`
 	KodeKabKota   string    `json:"kode_kab_kota"`
 	KodeKecamatan string    `json:"kode_kecamatan"`
 	NPSN          string    `json:"npsn"`
-	Bentuk        string    `json:"bentuk"`
-	Status        string    `json:"status"`
+	Bentuk        string    `json:"bentuk" gorm:"not null"`
+	Status        string    `json:"status" gorm:"not null"`
 	AlamatJalan   string    `json:"alamat_jalan"`
 	Lintang       float64   `json:"lintang"`
 	Bujur         float64   `json:"bujur"`
-	//DeletedAt     time.Time `json:"deleted_at"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt     time.Time `json:"created_at" gorm:"type:timestamp"`
+	UpdatedAt     time.Time `json:"updated_at" gorm:"type:timestamp"`
 }
