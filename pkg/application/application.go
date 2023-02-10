@@ -2,8 +2,8 @@ package application
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/shadowbane/go-logger"
 	"github.com/shadowbane/golang-microservice-sekolah/pkg/config"
-	"github.com/shadowbane/golang-microservice-sekolah/pkg/logger"
 )
 
 type Application struct {

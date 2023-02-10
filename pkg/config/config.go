@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"github.com/shadowbane/golang-microservice-sekolah/pkg/logger"
+	"github.com/shadowbane/go-logger"
 	"go.uber.org/zap"
 	"os"
 

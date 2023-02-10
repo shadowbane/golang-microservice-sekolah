@@ -1,14 +1,10 @@
-FROM golang:1.17-alpine
+FROM golang:1.18-alpine
 
 MAINTAINER Adli I. Ifkar <adly.shadowbane@gmail.com>
 ENV LANG=en_US.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
 
 USER root
-
-#RUN unset GOPATH
-#
-#RUN pwd
 
 RUN mkdir -p /opt/application
 
